@@ -1,0 +1,78 @@
+import Metronome;
+	
+	public class MetGUI(){
+	
+	private static void createAndShowGUI() {
+		
+		metWindow.setSize(640, 1136);
+		metWindow.setVisible(true);
+		
+	    class SBAction extends AbstractAction {
+	    	
+	    	protected Action startAction, stopAction;
+	        
+	    	
+	        public SBAction(String text, ImageIcon icon,
+	                          String desc, Integer mnemonic) {
+	            super(text, icon);
+	            putValue(SHORT_DESCRIPTION, desc);
+	            putValue(MNEMONIC_KEY, mnemonic);
+	        }
+	        
+	        public void actionPerformed(ActionEvent e) {
+	        	if("start".equals(e.getActionCommand())){
+	        		Metronome.start(sq, loop);
+	        	}
+	        	else
+	        		if("stop".equals(e.getActionCommand())){
+	        			sequencer.stop();
+	        		}
+	            //displayResult("Action for first button/menu item", e);
+	        }
+	    }
+        SBAction startAction = new SBAction("Start", null,
+                "Start the metronome",
+                new Integer(KeyEvent.VK_L));
+        
+        SBAction stopAction = new SBAction("Stop", null,
+                "Stop the metronome",
+                new Integer(KeyEvent.VK_L)); 
+        
+		JFrame metFrame = new JFrame("Metronome");
+		metFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		JLabel metLabel = new JLabel("", SwingConstants.CENTER);
+		metLabel.setPreferredSize(new Dimension(640,1136));
+		metLabel.setFont(metLabel.getFont().deriveFont(Font.BOLD));
+		metLabel.setBackground(Color.WHITE);
+		
+		JButton startButton = new JButton(startAction);
+		startButton = new JButton(startAction);
+		startButton.setPreferredSize(new Dimension(75,250));
+		startButton.setEnabled(true);
+		startButton.setVisible(true);
+		startButton.addActionListener(startAction);
+		startButton.setActionCommand("start");
+		
+		JButton stopButton = new JButton(stopAction);
+		stopButton = new JButton(stopAction);
+		stopButton.setPreferredSize(new Dimension(75,250));
+		stopButton.setEnabled(true);
+		stopButton.setVisible(true);
+		stopButton.addActionListener(stopAction);
+		stopButton.setActionCommand("stop");
+		
+		Container theContentPane = metFrame.getContentPane();
+		theContentPane.setBackground(null);
+		theContentPane.setPreferredSize(new Dimension(640, 1136));
+		Container buttonPane = new Container();
+		buttonPane.setBackground(null);
+		buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.Y_AXIS));
+		metFrame.getContentPane().add(BorderLayout.EAST, 
+				buttonPane);metFrame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+		metFrame.setContentPane(theContentPane);
+		buttonPane.add(startButton);
+		buttonPane.add(stopButton);
+		metFrame.pack();
+		metFrame.setVisible(true);
+	}
+	}
