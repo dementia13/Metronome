@@ -105,7 +105,7 @@ public class Metronome implements javax.sound.midi.Sequencer{
 	// -- TIME SIGNATURE CONSTANTS ----------------------------------
     final static String[] LOWER_VALUES = {"1", "2", "4", "8", "16"};
 	final static String[] UPPER_VALUES = {"2", "3", "4", "5", "6", "7", 
-			"8", "9"};
+			"8", "9", "11", "12", "13", "15"};
 
 	static long beatLength = (long)((double)MINUTE / tempoInBPM * NANO);
 	static long barLength = beatLength * upper;
@@ -411,95 +411,83 @@ public class Metronome implements javax.sound.midi.Sequencer{
 		}
     }
     
-    /*
-    static class playBar{
-
-        Timer timer = new Timer(true);
-        javax.swing.SwingUtilities.invokeLater(new Runnable(){
-            public void run(){
-                TimerTask play = new playBeat();
-                play.run();
-                timer.scheduleAtFixedRate(play, 0, 1000);
-            }
-        });
-    }
-    */
-    
     static class playBeat extends TimerTask{
 			
 			public void run() {
-				notePlay();
+					//notePlay(99);
+				for(int beat = 0; beat < upper; beat++){
+					notePlay(beat);
+					//System.out.println(time);
+				}
 			}
         
-        static private  void notePlay(){
-        	for(int beat = 0; beat < upper; beat++){
+        static private  void notePlay(int beat){
+        	//for(int beat = 0; beat < upper; beat++){
         		if (beat % time == 0){ 	// play primary accent
         			playSound(PRI_ACC);
+        			//System.out.println("Accent");
         				// & send to display
         		}
         		// determine location of secondary accent
         		// if beat % time = secondary accent, play secondary accent
-            	//else
+            	else
+            		if((beat + 1) == getSecAcc()){
+            			playSound(SEC_ACC);
+            			//System.out.println("Weak Accent");
+            		}
+        		/*
+            		else
+            			if(beat == 99){
+            				// silent start beat for timing
+            				playSound(null);
+            			}
+        		*/
+            		//if (beat % time)
             		//playSound(SEC_ACC);
     				// & send to display
         		// else play normal beat
             	else{
             		playSound(NML_BEAT);
+            		//System.out.println("beat");
         			// & send to display
             	}
         	//beatTimer.schedule(beatCount, 0, barLength / upper);	
-        	}
+        	//}
         }
     }
 
-    
-    /*
-    static class clickLoop{
-    	//static long barLength = (long)(MINUTE / tempoInBPM) * upper * 1000;
-    	static long beatLength = (long)(MINUTE / tempoInBPM) * 1000;	//duration in milliseconds
-    	private final static ScheduledExecutorService scheduler =
-    			     Executors.newScheduledThreadPool(1);
-    	
-    	final static Runnable tick = new Runnable(){
-    		public void run(){
-    			loopPlay();
-    		}
-    	};*/
-    	/*
-    	final ScheduledFuture<?> barCtl = 
-    			scheduler.scheduleAtFixedRate(tick, 0, barLength, TimeUnit.MILLISECONDS);
-    	final static ScheduledFuture<?> beatCtl = 
-    			scheduler.scheduleAtFixedRate(tick, 0, beatLength, TimeUnit.MILLISECONDS);
-    	*/	
-    	/*
-	    static private String loopPlay(){
-	    	String click = new String("");
-	    	long time = System.currentTimeMillis();
-	    	
-	    	//clickLoop barTick = new clickLoop();
-	    	//scheduler.scheduleAtFixedRate(tick, 0, barLength, TimeUnit.MILLISECONDS);
-			for(int beat = 0; beat < upper; beat++){
-				//clickLoop beatTick = new clickLoop();
-	    		if (beat % time == 0){ 	// play primary accent
-	    			playSound(PRI_ACC);
-	    				// & send to display
-	    		}
-	    		// determine location of secondary accent
-	    		// if beat % time = secondary accent, play secondary accent
-	        	//else
-	        		//playSound(SEC_ACC);
-					// & send to display
-	    		// else play normal beat
-	        	else{
-	        		playSound(SEC_ACC);
-	    			// & send to display
-	        	}
-	    		//scheduler.scheduleAtFixedRate((Runnable) beatCtl, beatLength, beatLength, TimeUnit.MILLISECONDS);
-	    		//time += beat_length;
-	    	}
-			return click;
-	    }*/
-    //}
+    static int getSecAcc(){
+    	switch (upper){
+    	case 1:
+    		return 0;
+    	case 2:
+    		return 0;
+    	case 3:
+    		return 0;
+    	case 4:
+    		return 3;
+    	case 5:
+    		return 4;
+    	case 6:
+    		return 4;
+    	case 7:
+    		return 5;
+    	case 8:
+    		return 5;
+    	case 9:
+    		return 4;
+    	case 11:
+    		return 4;
+    	case 12:
+    		return 7;
+    	case 13:
+    		return 5;
+    	case 15:		// Possum Kingdom
+    		return 8;
+		default:
+			return 0;
+    	}
+    }
     
     static void playSound(String fileString) { 
 
