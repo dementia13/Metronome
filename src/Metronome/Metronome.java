@@ -399,7 +399,7 @@ public class Metronome implements javax.sound.midi.Sequencer{
     		}
     	};
     	int beat = 0;
-    	long delay = 0;
+    	long delay = 1;
 		ScheduledExecutorService executor = 
 				Executors.newSingleThreadScheduledExecutor();
 
@@ -429,6 +429,7 @@ public class Metronome implements javax.sound.midi.Sequencer{
 			
 			public void run() {
 				notePlay();
+				//System.out.println(time);
 			}
         
         static private  void notePlay(){
@@ -509,6 +510,8 @@ public class Metronome implements javax.sound.midi.Sequencer{
     		Clip clip = AudioSystem.getClip();
             clip.open(inputStream);
             clip.start(); 
+            //System.out.println(clip.getFrameLength());
+            System.out.println(System.currentTimeMillis());
     	} 
 		catch (Exception e) {
 	        System.err.println(e.getMessage());

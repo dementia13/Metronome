@@ -28,6 +28,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import Metronome.Metronome.playBar;
 import Metronome.Metronome.playBeat;
@@ -76,6 +78,10 @@ public class MetGUI extends Frame implements WindowListener,ActionListener {
     
     static BarLoop getLoop(){
     	return theLoop;
+    }
+    
+    static int getTempo(){
+    	return (int)Metronome.tempoInBPM;
     }
 
     static void setLoop(BarLoop newLoop, boolean running){
@@ -163,7 +169,7 @@ static void createAndShowGUI() {
 		//-- ADD INPUT PANEL AT TOP OF MAIN FRAME
 		JPanel inputPane = new JPanel();
 		inputPane.setBackground(Color.white);
-		inputPane.setPreferredSize(new Dimension(1136, 100));
+		inputPane.setPreferredSize(new Dimension(1136, 60));
 		theContentPane.add(inputPane, new Integer(10));
 		mainConstraints.fill = GridBagConstraints.BOTH;
 		mainConstraints.gridwidth = 3;
@@ -176,9 +182,9 @@ static void createAndShowGUI() {
 			//-- TEMPO --
 		GridBagConstraints inputConstraints = new GridBagConstraints();
 		JPanel tempoPanel = new JPanel(new FlowLayout());
-		tempoPanel.setBackground(Color.WHITE);
+		tempoPanel.setBackground(Color.white);
 		JLabel tempoLabel = new JLabel("Tempo:");
-		JTextField tempoText = new JTextField("120");
+		JTextField tempoText = new JTextField(Integer.toString(getTempo()));
 		JButton tempoButton = new JButton("Set");
 		tempoPanel.add(tempoLabel);
 		tempoPanel.add(tempoText);
@@ -189,16 +195,6 @@ static void createAndShowGUI() {
 		inputConstraints.gridx = 0;
 		inputConstraints.gridy = 0;
 		layout.setConstraints(tempoPanel, inputConstraints);
-		
-		/*
-		 * inputPane.add(tempoText, new Integer(20));
-		inputConstraints.weightx = 1;
-		tempoText.setText("120");
-		inputConstraints.ipadx = 10;
-		inputConstraints.gridx = 1;
-		inputConstraints.gridy = 0;
-		layout.setConstraints(tempoText, inputConstraints);
-		*/
 
 		tempoText.addActionListener(null);
 		tempoButton.addActionListener(null);
@@ -243,12 +239,30 @@ static void createAndShowGUI() {
 		// -- HORIZONTAL SLIDER ----------------------------------------
 		JPanel sliderPanel = new JPanel();
 		JSlider tempoSlider = new JSlider(60, 300);
+		tempoSlider.setPreferredSize(new Dimension (1136,60));
+		tempoSlider.setPaintTicks(true);
+		//tempoSlider.setMajorTickSpacing(10);		// too cluttered
+		tempoSlider.setMinorTickSpacing(4);
+		tempoSlider.createStandardLabels(4);
+		tempoSlider.setPaintLabels(true);
+		tempoSlider.setSnapToTicks(true);
 		sliderPanel.add(tempoSlider);
+		
+		theContentPane.add(sliderPanel, new Integer(20));
+		GridBagConstraints sliderConstraints = new GridBagConstraints();
+		sliderConstraints.fill = GridBagConstraints.HORIZONTAL;
+		sliderConstraints.gridx = 0;
+		sliderConstraints.gridy = 1;
+		sliderConstraints.gridwidth = GridBagConstraints.REMAINDER;
+		layout.setConstraints(sliderPanel, sliderConstraints);
+		//sliderPanel.setVisible(true);		// unnecessary
+		
+		tempoSlider.addChangeListener(null);
 		
 		
 		
 		//-- ADD PANEL FOR LIGHTS AT LEFT OF MAIN FRAME
-		JPanel displayPane = new JPanel();
+		JPanel displayPane = new JPanel(new FlowLayout());
 		theContentPane.add(displayPane, new Integer(10));
 		displayPane.setPreferredSize(new Dimension(800, 540));
 		displayPane.setBackground(Color.white);
@@ -256,12 +270,14 @@ static void createAndShowGUI() {
 		mainConstraints.weightx = 0.5;
 		mainConstraints.ipadx = 0;
 		mainConstraints.gridx = 0;
-		mainConstraints.gridy = 1;
+		mainConstraints.gridy = 2;
 		layout.setConstraints(displayPane,  mainConstraints);
 		
 		//-- ADD LIGHTS TO DISPLAY --
 		
-		
+			//	Create #LEDs equal to variable "upper"
+			//	
+			//	Swap LED images depending on beat
 		
 		//-- ADD BUTTON PANE AT RIGHT OF MAIN FRAME --
 		JPanel buttonPane = new JPanel();
@@ -271,7 +287,7 @@ static void createAndShowGUI() {
 		mainConstraints.anchor = GridBagConstraints.BASELINE_TRAILING;
 		mainConstraints.weightx = 0.66;
 		mainConstraints.gridx = 1;
-		mainConstraints.gridy = 1;
+		mainConstraints.gridy = 2;
 		layout.setConstraints(buttonPane, mainConstraints);
 		
 		//-- CREATE START & STOP BUTTONS
@@ -329,15 +345,6 @@ static void createAndShowGUI() {
 		
 		// -- TEMPO ACTION LISTENERS -------------------------------------
 		
-		tempoText.addActionListener(new java.awt.event.ActionListener(){
-			public void tempoTextActionPerformed(ActionEvent evt){
-				actionPerformed(evt);
-			}
-			
-			public void actionPerformed(ActionEvent e){
-			}
-		});
-		
 		tempoButton.addActionListener(new ActionListener(){
 			public void tempoButtonAction(ActionEvent evt){
 				
@@ -349,6 +356,25 @@ static void createAndShowGUI() {
 					stopButton.doClick();
 					startButton.doClick();
 				}
+			}
+		});
+		
+		tempoSlider.addChangeListener(new ChangeListener(){
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				setTempo(tempoSlider.getValue());
+				tempoText.setText(Integer.toString(getTempo()));
+			}
+			
+		});
+		
+		tempoText.addActionListener(new java.awt.event.ActionListener(){
+			public void tempoTextActionPerformed(ActionEvent evt){
+				actionPerformed(evt);
+			}
+			
+			public void actionPerformed(ActionEvent e){
 			}
 		});
 		
