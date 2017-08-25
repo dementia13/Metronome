@@ -28,6 +28,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import Metronome.Metronome.playBar;
 import Metronome.Metronome.playBeat;
@@ -36,6 +38,13 @@ public class MetGUI extends Frame implements WindowListener,ActionListener {
 	private static boolean clicked = false;
 	private static boolean stopped = true;
 	public ScheduledExecutorService exec;
+	
+	static ImageIcon nmlLedIcon = new ImageIcon("src/led_nml.png");
+	static ImageIcon offLedIcon = new ImageIcon("src/led_off.png");
+	static ImageIcon priLedIcon = new ImageIcon("src/led_pri.png");
+	static ImageIcon secLedIcon = new ImageIcon("src/led_sec.png");
+	
+	// Loop object
 
     static class BarLoop{
     	boolean isRunning;
@@ -78,6 +87,10 @@ public class MetGUI extends Frame implements WindowListener,ActionListener {
     	return theLoop;
     }
 
+    static int getTempo(){
+    	return (int)Metronome.tempoInBPM;
+    }
+
     static void setLoop(BarLoop newLoop, boolean running){
     	theLoop = newLoop;
     	theLoop.isRunning = running;
@@ -85,6 +98,24 @@ public class MetGUI extends Frame implements WindowListener,ActionListener {
     
     public static void setTempo(int tempo){
     	Metronome.tempoInBPM = tempo;
+    }
+    
+    static class ledPanel extends Component{
+    	JPanel thePanel = new JPanel();
+    	JLabel theLabel = new JLabel();
+    	ledPanel(){
+    		thePanel.setBackground(Color.white);
+    		thePanel.setPreferredSize(new Dimension(70, 70));
+    		thePanel.setEnabled(true);
+    		theLabel.setPreferredSize(new Dimension(70, 70));
+    		theLabel.setBackground(Color.WHITE);
+    		theLabel.setIcon(offLedIcon);
+    		theLabel.setEnabled(true);
+    		thePanel.add(theLabel);
+    		thePanel.revalidate();
+    		thePanel.repaint();
+    		thePanel.setVisible(true);
+    	};
     }
     
     public MetGUI() {
@@ -103,43 +134,7 @@ public class MetGUI extends Frame implements WindowListener,ActionListener {
 	}
 	
 static void createAndShowGUI() {
-		
-		/*
-	    class SBAction extends AbstractAction {
-	    	
-	    	//protected Action startAction, stopAction;
-	        
-	    	
-	        public SBAction(String text, ImageIcon icon,
-	                          String desc, Integer mnemonic) {
-	            super(text, icon);
-	            putValue(SHORT_DESCRIPTION, desc);
-	            putValue(MNEMONIC_KEY, mnemonic);
-	        }
-	        
-	        public void actionPerformed(ActionEvent e) {
-		
-        String fileString = "/Users/sean/Documents/Programming/Eclipse/workspace/Metronome/src/click.wav";
-
-        playSound();
-	        }
-	    
-	            //displayResult("Action for first button/menu item", e);
-	    
-
-        SBAction startAction = new SBAction("Start", null,
-                "Start the metronome",
-                new Integer(KeyEvent.VK_L));
-        
-        SBAction stopAction = new SBAction("Stop", null,
-                "Stop the metronome",
-                new Integer(KeyEvent.VK_L)); 
-        
-        SBAction tempoAction = new SBAction("Tempo", null,
-        		"Set the tempo",
-        		new Integer(KeyEvent.KEY_LOCATION_NUMPAD));
-	    }
-        */
+	
 		JFrame metFrame = new JFrame("Metronome");
 		metFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		JLabel metLabel = new JLabel("", SwingConstants.CENTER);
@@ -163,7 +158,7 @@ static void createAndShowGUI() {
 		//-- ADD INPUT PANEL AT TOP OF MAIN FRAME
 		JPanel inputPane = new JPanel();
 		inputPane.setBackground(Color.white);
-		inputPane.setPreferredSize(new Dimension(1136, 100));
+		inputPane.setPreferredSize(new Dimension(1136, 60));
 		theContentPane.add(inputPane, new Integer(10));
 		mainConstraints.fill = GridBagConstraints.BOTH;
 		mainConstraints.gridwidth = 3;
@@ -176,9 +171,9 @@ static void createAndShowGUI() {
 			//-- TEMPO --
 		GridBagConstraints inputConstraints = new GridBagConstraints();
 		JPanel tempoPanel = new JPanel(new FlowLayout());
-		tempoPanel.setBackground(Color.WHITE);
+		tempoPanel.setBackground(Color.white);
 		JLabel tempoLabel = new JLabel("Tempo:");
-		JTextField tempoText = new JTextField("120");
+		JTextField tempoText = new JTextField(Integer.toString(getTempo()));
 		JButton tempoButton = new JButton("Set");
 		tempoPanel.add(tempoLabel);
 		tempoPanel.add(tempoText);
@@ -189,16 +184,6 @@ static void createAndShowGUI() {
 		inputConstraints.gridx = 0;
 		inputConstraints.gridy = 0;
 		layout.setConstraints(tempoPanel, inputConstraints);
-		
-		/*
-		 * inputPane.add(tempoText, new Integer(20));
-		inputConstraints.weightx = 1;
-		tempoText.setText("120");
-		inputConstraints.ipadx = 10;
-		inputConstraints.gridx = 1;
-		inputConstraints.gridy = 0;
-		layout.setConstraints(tempoText, inputConstraints);
-		*/
 
 		tempoText.addActionListener(null);
 		tempoButton.addActionListener(null);
@@ -243,12 +228,29 @@ static void createAndShowGUI() {
 		// -- HORIZONTAL SLIDER ----------------------------------------
 		JPanel sliderPanel = new JPanel();
 		JSlider tempoSlider = new JSlider(60, 300);
+		tempoSlider.setPreferredSize(new Dimension (1136,60));
+		tempoSlider.setPaintTicks(true);
+		//tempoSlider.setMajorTickSpacing(10);		// too cluttered
+		tempoSlider.setMinorTickSpacing(4);
+		tempoSlider.createStandardLabels(4);
+		tempoSlider.setPaintLabels(true);
+		tempoSlider.setSnapToTicks(true);
 		sliderPanel.add(tempoSlider);
 		
+		theContentPane.add(sliderPanel, new Integer(20));
+		GridBagConstraints sliderConstraints = new GridBagConstraints();
+		sliderConstraints.fill = GridBagConstraints.HORIZONTAL;
+		sliderConstraints.gridx = 0;
+		sliderConstraints.gridy = 1;
+		sliderConstraints.gridwidth = GridBagConstraints.REMAINDER;
+		layout.setConstraints(sliderPanel, sliderConstraints);
+		//sliderPanel.setVisible(true);		// unnecessary
 		
+		tempoSlider.addChangeListener(null);
 		
 		//-- ADD PANEL FOR LIGHTS AT LEFT OF MAIN FRAME
-		JPanel displayPane = new JPanel();
+		FlowLayout dpLayout = new FlowLayout(FlowLayout.LEADING, 25, 75);
+		JPanel displayPane = new JPanel(dpLayout);
 		theContentPane.add(displayPane, new Integer(10));
 		displayPane.setPreferredSize(new Dimension(800, 540));
 		displayPane.setBackground(Color.white);
@@ -256,12 +258,23 @@ static void createAndShowGUI() {
 		mainConstraints.weightx = 0.5;
 		mainConstraints.ipadx = 0;
 		mainConstraints.gridx = 0;
-		mainConstraints.gridy = 1;
-		layout.setConstraints(displayPane,  mainConstraints);
+		mainConstraints.gridy = 2;
 		
 		//-- ADD LIGHTS TO DISPLAY --
 		
-		
+			//	Create #LEDs equal to variable "upper"
+
+    	ledPanel[] ledLight = new ledPanel[Metronome.upper];
+		for(int i = 0; i < Metronome.upper; i++){
+			ledLight[i] = new ledPanel();
+			displayPane.add(ledLight[i].thePanel, i);
+		}
+		dpLayout.layoutContainer(displayPane);
+		displayPane.revalidate();
+		displayPane.repaint();
+		layout.setConstraints(displayPane,  mainConstraints);
+			//	
+			//	Swap LED images depending on beat
 		
 		//-- ADD BUTTON PANE AT RIGHT OF MAIN FRAME --
 		JPanel buttonPane = new JPanel();
@@ -271,13 +284,13 @@ static void createAndShowGUI() {
 		mainConstraints.anchor = GridBagConstraints.BASELINE_TRAILING;
 		mainConstraints.weightx = 0.66;
 		mainConstraints.gridx = 1;
-		mainConstraints.gridy = 1;
+		mainConstraints.gridy = 2;
 		layout.setConstraints(buttonPane, mainConstraints);
 		
 		//-- CREATE START & STOP BUTTONS
 		GridBagConstraints btnConstraints = new GridBagConstraints();
-		ImageIcon startIcon = new ImageIcon("/Applications/Metronome/files/start.png");
-		ImageIcon stopIcon = new ImageIcon("/Applications/Metronome/files/stop.png");
+		ImageIcon startIcon = new ImageIcon("src/start.png");
+		ImageIcon stopIcon = new ImageIcon("src/stop.png");
 		
 		JButton startButton = new JButton(startIcon);
 		buttonPane.add(startButton, new Integer(20));
@@ -321,6 +334,9 @@ static void createAndShowGUI() {
 			public void actionPerformed(ActionEvent e){
 				if(!stopped){
 					getLoop().stop();
+					for(int i = 0; i < Metronome.upper; i++){
+						ledLight[i].theLabel.setIcon(offLedIcon);
+					}
 				}
 				clicked = false; 
 				stopped = true;
@@ -328,15 +344,6 @@ static void createAndShowGUI() {
 		});
 		
 		// -- TEMPO ACTION LISTENERS -------------------------------------
-		
-		tempoText.addActionListener(new java.awt.event.ActionListener(){
-			public void tempoTextActionPerformed(ActionEvent evt){
-				actionPerformed(evt);
-			}
-			
-			public void actionPerformed(ActionEvent e){
-			}
-		});
 		
 		tempoButton.addActionListener(new ActionListener(){
 			public void tempoButtonAction(ActionEvent evt){
@@ -349,6 +356,29 @@ static void createAndShowGUI() {
 					stopButton.doClick();
 					startButton.doClick();
 				}
+			}
+		});
+		
+		tempoSlider.addChangeListener(new ChangeListener(){
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				setTempo(tempoSlider.getValue());
+				tempoText.setText(Integer.toString(getTempo()));
+				tempoButton.doClick();
+			}
+			
+			public void mouseReleased(MouseEvent e){
+			}
+			
+		});
+		
+		tempoText.addActionListener(new java.awt.event.ActionListener(){
+			public void tempoTextActionPerformed(ActionEvent evt){
+				actionPerformed(evt);
+			}
+			
+			public void actionPerformed(ActionEvent e){
 			}
 		});
 		
