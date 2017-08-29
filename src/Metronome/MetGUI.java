@@ -31,7 +31,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import Metronome.Metronome.playBar;
+//import Metronome.Metronome.playBar;
 import Metronome.Metronome.playBeat;
 
 public class MetGUI extends Frame implements WindowListener,ActionListener {
@@ -39,10 +39,14 @@ public class MetGUI extends Frame implements WindowListener,ActionListener {
 	private static boolean stopped = true;
 	public ScheduledExecutorService exec;
 	
-	static ImageIcon nmlLedIcon = new ImageIcon("src/led_nml.png");
+	static ImageIcon nmlLedIcon = new ImageIcon("src/led_nor.png");
 	static ImageIcon offLedIcon = new ImageIcon("src/led_off.png");
 	static ImageIcon priLedIcon = new ImageIcon("src/led_pri.png");
 	static ImageIcon secLedIcon = new ImageIcon("src/led_sec.png");
+	
+
+	static FlowLayout dpLayout = new FlowLayout(FlowLayout.LEADING, 25, 75);
+	static JPanel displayPane = new JPanel(dpLayout);
 	
 	// Loop object
 
@@ -51,34 +55,22 @@ public class MetGUI extends Frame implements WindowListener,ActionListener {
     	playBeat beat = new playBeat();
     	ScheduledExecutorService exec = 
     			Executors.newSingleThreadScheduledExecutor();
+    	int count = 0;
     	Runnable runnable = new Runnable(){
     		public void run(){
-    			beat.run();
+    				beat.run(count);
+    				count++;
     		}
     	};
     	ScheduledFuture loop = exec.scheduleAtFixedRate
     			(runnable, 0, (long)((double)Metronome.MINUTE / 
     					Metronome.tempoInBPM * Metronome.NANO), 
     							TimeUnit.NANOSECONDS);
-    	
-    	void play(){
-				try {
-					loop.get();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (ExecutionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-    	}
-    	
+
     	void stop(){
     		loop.cancel(true);
     		exec.shutdownNow();
     	}
-
     }
     
     static BarLoop theLoop;
@@ -110,12 +102,78 @@ public class MetGUI extends Frame implements WindowListener,ActionListener {
     		theLabel.setPreferredSize(new Dimension(70, 70));
     		theLabel.setBackground(Color.WHITE);
     		theLabel.setIcon(offLedIcon);
+    		theLabel.setHorizontalTextPosition(SwingConstants.LEADING);
     		theLabel.setEnabled(true);
     		thePanel.add(theLabel);
     		thePanel.revalidate();
     		thePanel.repaint();
     		thePanel.setVisible(true);
     	};
+    }
+    
+    // LED display getter & setter methods
+    
+    static ledPanel[] ledLight = new ledPanel[Metronome.upper];
+    
+    static void clearLedPanel(){
+    	displayPane.removeAll();
+    	displayPane.revalidate();
+    	displayPane.repaint();
+    }
+    
+    static void drawLedPanel(){
+    	for(int i = 0; i < Metronome.upper; i++){
+			ledLight[i] = new ledPanel();
+			displayPane.add(ledLight[i].thePanel, i);
+			displayPane.revalidate();
+			displayPane.repaint();
+		}
+    }
+    
+    static ledPanel[] getLedPanel(){
+    	return ledLight;
+    }
+    
+    static void setActiveLed(int beat){
+    	if(beat == 0){
+    		for(int i = 0; i < Metronome.upper; i++){
+    			if(i == beat){
+    				ledLight[i].theLabel.setIcon(priLedIcon);
+    			}
+    			else{
+    				ledLight[i].theLabel.setIcon(offLedIcon);
+    			}
+    		}
+			ledLight[beat].theLabel.setText(Integer.toString(beat + 1));
+		}
+    	else
+			if(beat == (Metronome.getSecAcc() - 1)){
+	    		for(int i = 0; i < Metronome.upper; i++){
+	    			if(i == beat){
+	    				ledLight[i].theLabel.setIcon(secLedIcon);
+	    			}
+	    			else {
+	    				ledLight[i].theLabel.setIcon(offLedIcon);
+	    			}
+	    		}
+				ledLight[beat].theLabel.setText(Integer.toString(beat + 1));
+			}
+			else{
+	    		for(int i = 0; i < Metronome.upper; i++){
+	    			if(i == beat){
+						ledLight[beat].theLabel.setIcon(nmlLedIcon);
+	    			}
+	    			else {
+	    				ledLight[i].theLabel.setIcon(offLedIcon);
+	    			}
+	    		}
+    	}
+    	displayPane.revalidate();
+    	displayPane.repaint();
+    }
+    
+    static void setLedPanel(ledPanel[] theLights){
+    	ledLight = theLights;
     }
     
     public MetGUI() {
@@ -190,12 +248,10 @@ static void createAndShowGUI() {
 		
 			//-- TIME SIGNATURE --
 		JLabel sigLabel = new JLabel("Time Signature:");
-		//JLabel upperTime = new JLabel("4");
 		JComboBox upperTime = new JComboBox(Metronome.UPPER_VALUES);
 		upperTime.setEditable(false);
 		upperTime.setSelectedItem("4");
 		final JLabel timeDivider = new JLabel("/");
-		//JLabel lowerTime = new JLabel("4");
 		JComboBox lowerTime = new JComboBox(Metronome.LOWER_VALUES);
 		lowerTime.setEditable(false);
 		lowerTime.setSelectedItem("4");
@@ -230,7 +286,6 @@ static void createAndShowGUI() {
 		JSlider tempoSlider = new JSlider(60, 300);
 		tempoSlider.setPreferredSize(new Dimension (1136,60));
 		tempoSlider.setPaintTicks(true);
-		//tempoSlider.setMajorTickSpacing(10);		// too cluttered
 		tempoSlider.setMinorTickSpacing(4);
 		tempoSlider.createStandardLabels(4);
 		tempoSlider.setPaintLabels(true);
@@ -244,13 +299,10 @@ static void createAndShowGUI() {
 		sliderConstraints.gridy = 1;
 		sliderConstraints.gridwidth = GridBagConstraints.REMAINDER;
 		layout.setConstraints(sliderPanel, sliderConstraints);
-		//sliderPanel.setVisible(true);		// unnecessary
 		
 		tempoSlider.addChangeListener(null);
 		
 		//-- ADD PANEL FOR LIGHTS AT LEFT OF MAIN FRAME
-		FlowLayout dpLayout = new FlowLayout(FlowLayout.LEADING, 25, 75);
-		JPanel displayPane = new JPanel(dpLayout);
 		theContentPane.add(displayPane, new Integer(10));
 		displayPane.setPreferredSize(new Dimension(800, 540));
 		displayPane.setBackground(Color.white);
@@ -264,11 +316,8 @@ static void createAndShowGUI() {
 		
 			//	Create #LEDs equal to variable "upper"
 
-    	ledPanel[] ledLight = new ledPanel[Metronome.upper];
-		for(int i = 0; i < Metronome.upper; i++){
-			ledLight[i] = new ledPanel();
-			displayPane.add(ledLight[i].thePanel, i);
-		}
+    	//ledPanel[] ledLight = new ledPanel[Metronome.upper];
+		drawLedPanel();
 		dpLayout.layoutContainer(displayPane);
 		displayPane.revalidate();
 		displayPane.repaint();
@@ -351,7 +400,9 @@ static void createAndShowGUI() {
 			}
 			
 			public void actionPerformed(ActionEvent e){
-				setTempo(Integer.valueOf(tempoText.getText()));
+				int tmpo = Integer.valueOf(tempoText.getText());
+				setTempo(tmpo);
+				tempoSlider.setValue(tmpo);
 				if(!stopped){
 					stopButton.doClick();
 					startButton.doClick();
@@ -389,7 +440,7 @@ static void createAndShowGUI() {
 				
 			}
 			public void actionPerformed(ActionEvent e){
-				Metronome.lower = (int) lowerTime.getSelectedItem();
+				Metronome.lower = Integer.valueOf((String)(lowerTime.getSelectedItem()));
 			}
 		});
 		
@@ -398,8 +449,11 @@ static void createAndShowGUI() {
 				
 			}
 			public void actionPerformed(ActionEvent e){
+				clearLedPanel();
 				Metronome.upper = 
 						Integer.valueOf((String) upperTime.getSelectedItem());
+				setLedPanel(new ledPanel[Metronome.upper]);
+				drawLedPanel();
 			}
 		});
 		

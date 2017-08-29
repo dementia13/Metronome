@@ -218,11 +218,7 @@ public class Metronome implements javax.sound.midi.Sequencer{
     public long getTickPosition(){
         return currentPosition;
     }
-    /*
-    static public Timer getTimer(){
-    	return new Timer(true);
-    }
-	*/
+
     public boolean getTrackMute(int track){
         return false;
     }
@@ -384,75 +380,54 @@ public class Metronome implements javax.sound.midi.Sequencer{
     
     // ---- Audio Classes & Methods --- 
     
-    static class playBar {
-    	Runnable bar = new Runnable(){
-    		public void run(){
-	    		while(beat < upper){
-		    		if (beat == 0){ 	// play primary accent
-		    			playSound(PRI_ACC);
-		    				// & send to display
-		    		}
-		        	else{
-		        		playSound(NML_BEAT);
-		        	}
-		    	}
-    		}
-    	};
-    	int beat = 0;
-    	long delay = 0;
-		ScheduledExecutorService executor = 
-				Executors.newSingleThreadScheduledExecutor();
-
-		private void loopPlay(){
-			ScheduledFuture aBar = executor.scheduleAtFixedRate(bar, 
-					delay, beatLength, TimeUnit.NANOSECONDS);
-			beat++;
-	    	
-		}
-    }
-    
     static class playBeat extends TimerTask{
-			
-			public void run() {
-					//notePlay(99);
-				for(int beat = 0; beat < upper; beat++){
-					notePlay(beat);
-					//System.out.println(time);
-				}
+    	public void run(){}
+    	
+		public void run(int beat) {
+			if(beat > upper){
+				beat = beat % upper;
 			}
+    		if (beat == 0){ 	// play primary accent
+    			playSound(PRI_ACC);
+    				// & send to display
+    			MetGUI.setActiveLed(beat);
+    		}
+    		// determine location of secondary accent
+    		// if beat % time = secondary accent, play secondary accent
+        	else
+        		if((beat + 1) == getSecAcc()){
+        			playSound(SEC_ACC);
+    				// & send to display
+        			MetGUI.setActiveLed(beat);
+        		}
+    		// else play normal beat
+        	else{
+        		playSound(NML_BEAT);
+    			// & send to display
+    			MetGUI.setActiveLed(beat);
+        	}
+		}
         
         static private  void notePlay(int beat){
-        	//for(int beat = 0; beat < upper; beat++){
-        		if (beat % time == 0){ 	// play primary accent
-        			playSound(PRI_ACC);
-        			//System.out.println("Accent");
-        				// & send to display
-        		}
-        		// determine location of secondary accent
-        		// if beat % time = secondary accent, play secondary accent
-            	else
-            		if((beat + 1) == getSecAcc()){
-            			playSound(SEC_ACC);
-            			//System.out.println("Weak Accent");
-            		}
-        		/*
-            		else
-            			if(beat == 99){
-            				// silent start beat for timing
-            				playSound(null);
-            			}
-        		*/
-            		//if (beat % time)
-            		//playSound(SEC_ACC);
+    		if (beat % time == 0){ 	// play primary accent
+    			playSound(PRI_ACC);
     				// & send to display
-        		// else play normal beat
-            	else{
-            		playSound(NML_BEAT);
-            		//System.out.println("beat");
-        			// & send to display
-            	}
-        	//beatTimer.schedule(beatCount, 0, barLength / upper);	
-        	//}
+    			MetGUI.setActiveLed(beat);
+    		}
+    		// determine location of secondary accent
+    		// if beat % time = secondary accent, play secondary accent
+        	else
+        		if((beat + 1) == getSecAcc()){
+        			playSound(SEC_ACC);
+    				// & send to display
+        			MetGUI.setActiveLed(beat);
+        		}
+    		// else play normal beat
+        	else{
+        		playSound(NML_BEAT);
+    			// & send to display
+    			MetGUI.setActiveLed(beat);
+        	}
         }
     }
 
@@ -482,7 +457,7 @@ public class Metronome implements javax.sound.midi.Sequencer{
     		return 7;
     	case 13:
     		return 5;
-    	case 15:		// Possum Kingdom
+    	case 15:		
     		return 8;
 		default:
 			return 0;
@@ -509,6 +484,9 @@ public class Metronome implements javax.sound.midi.Sequencer{
 	public static void main(String[] args) {
 		/*
         // Obtain information about all the installed synthesizers.
+         * This is currently unimplemented, but is left in for future use
+         */
+		/*
        Vector synthInfos = null;
        MidiDevice device;
        MidiDevice.Info[] infos;
@@ -538,6 +516,7 @@ public class Metronome implements javax.sound.midi.Sequencer{
 				e.printStackTrace();
 			}
            Metronome metronome = new Metronome();
+           */
            //Sequence sq = metronome.getSequence();
 
                //sq.start();
@@ -546,27 +525,6 @@ public class Metronome implements javax.sound.midi.Sequencer{
                synthInfos.add(infos[i]);
            }
            System.out.println(infos[i]);  */    
-       /*
-       //Schedule a job for the event-dispatching thread:
-       //creating and showing this application's GUI.
-		try{
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} 
-	    catch (UnsupportedLookAndFeelException e) {
-	        // handle exception
-	     }
-	     catch (ClassNotFoundException e) {
-	        // handle exception
-	     }
-	     catch (InstantiationException e) {
-	        // handle exception
-	     }
-	     catch (IllegalAccessException e) {
-	        // handle exception
-	     }
-		*/
-        
-		//MetGUI metWindow = new MetGUI();
 		
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run(){
@@ -576,5 +534,4 @@ public class Metronome implements javax.sound.midi.Sequencer{
 		});
 		
        }
-	 
 }
